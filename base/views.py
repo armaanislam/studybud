@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import UserCreationForm
 from .models import Room, Topic
 from .forms import RoomForm
 
@@ -15,12 +16,12 @@ from .forms import RoomForm
 #]
 
 def loginPage(request): #Django has a built in function named login, so we can't use that
-
+    page = 'login'
     if request.user.is_authenticated: #Means if the user logs in, and through url he goes back to the login page, he will be redirected to home that is the dont need to login again
         return redirect('home')
 
     if request.method == 'POST':
-        username = request.POST.get('username') #we user name = 'username' in input in navbar.html
+        username = request.POST.get('username').lower() #we user name = 'username' in input in navbar.html
         password = request.POST.get('password')
 
         try: #To authenticate if the user exists]
@@ -34,12 +35,34 @@ def loginPage(request): #Django has a built in function named login, so we can't
             return redirect('home')
         else:
             messages.error(request, 'Username or Password does not exist')
-    context = {}
+    context = {'page': page}
     return render(request, 'base/login_register.html', context)
+
+
 
 def logoutUser(request):
     logout(request)
     return redirect('home')
+
+
+
+def registerPage(request):
+    #page = 'register'
+    form = UserCreationForm()
+
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False) #To access the user rightaway, so commit=False to get that user object
+            user.name = user.username.lower()
+            user.save()
+            login(request, user) #Let the user login then redirect to home page
+            return redirect('home')
+        else:
+            messages.error(request, 'An error occured during registration')
+    return render(request, 'base/login_register.html', {'form':form})
+
+
 
 def home(request):
     q = request.GET.get('q') if request.GET.get('q') != None else ''
@@ -53,6 +76,8 @@ def home(request):
     context = {'rooms': rooms, 'topics': topics, 'room_count':room_count}
     return render(request, 'base/home.html', context)
 
+
+
 def room(request, pk):
     room = Room.objects.get(id=pk)
     #room = None
@@ -61,6 +86,8 @@ def room(request, pk):
     #        room = i
     context = {'room': room}
     return render(request, 'base/room.html', context)
+
+
 
 @login_required(login_url='login') #Extra authentication, To check if the user session does not exist, it will redirect to login page
 def createRoom(request):
@@ -75,6 +102,8 @@ def createRoom(request):
 
     context = {'form': form}
     return render(request, 'base/room_form.html', context)
+
+
 
 @login_required(login_url='login') #Extra authentication
 def updateRoom(request, pk):
@@ -92,6 +121,8 @@ def updateRoom(request, pk):
 
     context = {'form':form}
     return render(request, 'base/room_form.html', context)
+
+
 
 @login_required(login_url='login') #Extra authentication
 def deleteRoom(request, pk):

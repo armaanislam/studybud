@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('login/', views.loginPage, name="login"),
     path('logout/', views.logoutUser, name="logout"),
+    path('register/', views.registerPage, name="register"),
 
     path('', views.home, name='home'), #We can reference a view or a specific url using name
     path('room/<str:pk>/', views.room, name='room'), # room/ won't matter if we specify name

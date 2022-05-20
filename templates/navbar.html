@@ -7,6 +7,7 @@
 </form>
 
 {%  if request.user.is_authenticated %}
+<p>Hello {{ request.user }}</p>
 <a href="{% url 'logout' %}">Logout</a> {% comment %} Means if the user is authenticated it will log in and show the logout button{% endcomment %}
 {% else %}
 <a href="{% url 'login' %}">Login</a> {% comment %} Means if the user is not authenticated it will not log in and show the login button again{% endcomment %}
