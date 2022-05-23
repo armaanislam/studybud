@@ -113,7 +113,9 @@ def createRoom(request):
     if request.method == 'POST': #To check if anyone sent any data
         form = RoomForm(request.POST) #Pass the data in form
         if form.is_valid(): #To check if the form is filled with data
-            form.save() #To save the form
+            room = form.save(commit=False) #This will give us an instance of the room
+            room.host = request.user #Now host name is going to saved based on whos logged in
+            room.save()
             return redirect('home') #After submission it will redirect to home; here we used name='home'
         #request.POST.get('name')
         #print(request.POST)
