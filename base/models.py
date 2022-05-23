@@ -12,7 +12,7 @@ class Room(models.Model):
     topic = models.ForeignKey(Topic, on_delete=models.SET_NULL, null=True) #A topic can have multiple rooms, a room can have multiple topics but for now a room can have only one topic
     name = models.CharField(max_length=200)
     description = models.TextField(null=True, blank=True) #Blank = form, null = database; True means, wihtout any value the model can have this instance
-    participants = models.ManyToManyField(User, related_name='participants', blank=True) #As the user model is already onnected with room hot, we need to spcify a related name for this user
+    participants = models.ManyToManyField(User, related_name='participants', blank=True) #As the user model is already onnected with room host, we need to spcify a related name for this user
     updated = models.DateTimeField(auto_now=True)
     created = models.DateTimeField(auto_now_add=True)
 
