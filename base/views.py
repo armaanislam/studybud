@@ -98,6 +98,7 @@ def room(request, pk):
     return render(request, 'base/room.html', context)
 
 
+
 def userProfile(request, pk):
     user = User.objects.get(id=pk)
     rooms = user.room_set.all() #To get all children of a specific object, modelname_set.all()
@@ -105,6 +106,7 @@ def userProfile(request, pk):
     topics = Topic.objects.all()
     context = {'user': user, 'rooms': rooms, 'room_messages': room_messages, 'topics': topics}
     return render(request, 'base/profile.html', context)
+
 
 
 @login_required(login_url='login') #Extra authentication, To check if the user session does not exist, it will redirect to login page
@@ -188,6 +190,8 @@ def deleteMessage(request, pk):
         return redirect('home')
     return render(request, 'base/delete.html', {'obj': message}) #{'obj': message} making the html dynamic
 
+
+
 @login_required(login_url='login')
 def updateUser(request):
     user = request.user
@@ -198,6 +202,15 @@ def updateUser(request):
         if form.is_valid():
             form.save()
             return redirect('user-profile', pk=user.id)
-
-
     return render(request, 'base/update-user.html', {'form': form})
+
+def topicsPage(request):
+    q = request.GET.get('q') if request.GET.get('q') != None else ''
+    topics = Topic.objects.filter(name__icontains=q)
+    context = {'topics':topics}
+    return render(request, 'base/topics.html', context)
+
+
+def activityPage(request):
+    room_messages = Message.objects.all()
+    return render(request, 'base/activity.html', {'room_messages': room_messages})
