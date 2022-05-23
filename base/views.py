@@ -74,14 +74,16 @@ def home(request):
     )
     topics = Topic.objects.all()
     room_count = rooms.count()
-    context = {'rooms': rooms, 'topics': topics, 'room_count':room_count}
+    #room_messages = Message.objects.all()
+    room_messages = Message.objects.filter(Q(room__topic__name__icontains=q)) #Message_room_topic_name; If users clicks javascript in browse topic, only javascript related activited in recent activity
+    context = {'rooms': rooms, 'topics': topics, 'room_count':room_count, 'room_messages': room_messages}
     return render(request, 'base/home.html', context)
 
 
 
 def room(request, pk):
     room = Room.objects.get(id=pk)
-    room_messages = room.message_set.all().order_by('-created') #We can query child objects of a specific room; Room = parent, Message = Child, we have lowercase child name
+    room_messages = room.message_set.all()#.order_by('-created') #We can query child objects of a specific room; Room = parent, Message = Child, we have lowercase child name
     participants = room.participants.all() # One to many relation: _set.all(); Many to many relation: .all()
     if request.method == 'POST':
         message = Message.objects.create(
