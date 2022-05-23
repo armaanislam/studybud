@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
-from .models import Room, Topic
+from .models import Room, Topic, Message
 from .forms import RoomForm
 
 #rooms = [
@@ -24,8 +24,9 @@ def loginPage(request): #Django has a built in function named login, so we can't
         username = request.POST.get('username').lower() #we user name = 'username' in input in navbar.html
         password = request.POST.get('password')
 
-        try: #To authenticate if the user exists]
-            user = User.objects.get(username=username)
+        try: #To authenticate if the user exists
+            user = User.objects.filter(username=username)
+            user.user
         except:
             messages.error(request, 'User does not exist')
 
@@ -80,11 +81,18 @@ def home(request):
 
 def room(request, pk):
     room = Room.objects.get(id=pk)
-    #room = None
-    #for i in rooms:
-    #    if i['id'] == int(pk):
-    #        room = i
-    context = {'room': room}
+    room_messages = room.message_set.all().order_by('-created') #We can query child objects of a specific room; Room = parent, Message = Child, we have lowercase child name
+    participants = room.participants.all() # One to many relation: _set.all(); Many to many relation: .all()
+    if request.method == 'POST':
+        message = Message.objects.create(
+            user = request.user,
+            room = room,
+            body = request.POST.get('body')
+        )
+        room.participants.add(request.user)
+        return redirect('room', pk=room.id) #####
+
+    context = {'room': room, 'room_messages': room_messages, 'participants': participants}
     return render(request, 'base/room.html', context)
 
 
@@ -135,3 +143,17 @@ def deleteRoom(request, pk):
         room.delete()
         return redirect('home')
     return render(request, 'base/delete.html', {'obj': room})
+
+
+
+@login_required(login_url='login') #Extra authentication
+def deleteMessage(request, pk):
+    message = Message.objects.get(id=pk)
+
+    if request.user != message.user: #Only the owner of the room can delete the row,
+        return HttpResponse('You are not allowed here')
+
+    if request.method == 'POST':
+        message.delete()
+        return redirect('home')
+    return render(request, 'base/delete.html', {'obj': message}) #{'obj': message} making the html dynamic
