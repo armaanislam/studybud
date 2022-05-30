@@ -26,7 +26,6 @@ def loginPage(request): #Django has a built in function named login, so we can't
 
         try: #To authenticate if the user exists
             user = User.objects.filter(username=username)
-            user.user
         except:
             messages.error(request, 'User does not exist')
 
@@ -83,7 +82,8 @@ def home(request):
 
 def room(request, pk):
     room = Room.objects.get(id=pk)
-    room_messages = room.message_set.all()#.order_by('-created') #We can query child objects of a specific room; Room = parent, Message = Child, we have lowercase child name
+    room_messages = Message.objects.filter(room_id=pk)
+    #room_messages = room.message_set.all()#.order_by('-created') #We can query child objects of a specific room; Room = parent, Message = Child, we have lowercase child name
     participants = room.participants.all() # One to many relation: _set.all(); Many to many relation: .all()
     if request.method == 'POST':
         message = Message.objects.create(
@@ -92,7 +92,7 @@ def room(request, pk):
             body = request.POST.get('body')
         )
         room.participants.add(request.user)
-        return redirect('room', pk=room.id) #####
+        return redirect('room', pk=room.id) #Room url takes a str:pk
 
     context = {'room': room, 'room_messages': room_messages, 'participants': participants}
     return render(request, 'base/room.html', context)
@@ -109,13 +109,15 @@ def userProfile(request, pk):
 
 
 
-@login_required(login_url='login') #Extra authentication, To check if the user session does not exist, it will redirect to login page
+@login_required(login_url='login') #Extra authentication, To check if the user session does not exist, it will redirect to login page and won't let the user view the page
 def createRoom(request):
     form = RoomForm() #calling RoomForm from above
     topics = Topic.objects.all()
     if request.method == 'POST': #To check if anyone sent any data
         topic_name = request.POST.get('topic')
-        topic, created = Topic.objects.get_or_create(name=topic_name) #Either get or create the topic name from user
+        topic, created = Topic.objects.get_or_create( #Either get or create the topic name from user
+            name=topic_name
+        )
 
         Room.objects.create(
             host = request.user,
@@ -195,7 +197,7 @@ def deleteMessage(request, pk):
 @login_required(login_url='login')
 def updateUser(request):
     user = request.user
-    form = UserForm(instance=user)
+    form = UserForm(instance=user) #Might comment out
 
     if request.method == 'POST':
         form = UserForm(request.POST, instance=user)
